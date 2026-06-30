@@ -1,0 +1,8 @@
+target/
+*.log
+.idea/
+*.class
+.project
+.classpath
+.settings/
+*.tmp

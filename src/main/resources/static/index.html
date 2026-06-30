@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise URL Shortener & Analytics Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="index.css">
+    <!-- Chart.js CDN for professional metrics charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="glass-bg"></div>
+
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fa-solid fa-bolt brand-icon"></i>
+                <span>LinkSync<span class="brand-sub">.io</span></span>
+            </div>
+            <div class="nav-links">
+                <a href="/swagger-ui.html" target="_blank" class="nav-link-btn"><i class="fa-solid fa-book-open"></i> API Docs</a>
+                <a href="/h2-console" target="_blank" class="nav-link-btn"><i class="fa-solid fa-database"></i> DB Console</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-container">
+        <!-- Dashboard Intro -->
+        <header class="dashboard-header">
+            <h1>Shorten, Track, and Analyze Links</h1>
+            <p>A production-grade URL management platform offering instant redirection, advanced analytics, and custom alias configurations.</p>
+        </header>
+
+        <!-- Main Workspace: Shortener Form & Result -->
+        <div class="workspace-grid">
+            <!-- Left Panel: Shortener Form -->
+            <section class="card form-card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-plus-circle text-primary"></i> Create Short Link</h2>
+                    <p>Enter your long URL to generate a trackable redirect link</p>
+                </div>
+                <form id="shortenForm">
+                    <div class="form-group">
+                        <label for="originalUrl">Target URL</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-link input-icon"></i>
+                            <input type="url" id="originalUrl" placeholder="https://example.com/very/long/destination/url" required autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customAlias">Custom Alias <span class="badge-optional">Optional</span></label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-signature input-icon"></i>
+                                <input type="text" id="customAlias" placeholder="e.g. my-shortcut" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="expiryDays">Expiry Duration <span class="badge-optional">Optional</span></label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-clock input-icon"></i>
+                                <input type="number" id="expiryDays" min="1" placeholder="e.g. 7 days">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="btn btn-primary">
+                        <span>Shorten Link</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div id="errorAlert" class="alert alert-danger hidden">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span id="errorMessage">Error text here</span>
+                </div>
+            </section>
+
+            <!-- Right Panel: Result Area (Placeholder or Result Card) -->
+            <section id="resultCard" class="card result-card empty-state">
+                <!-- Empty State (Shown by default) -->
+                <div id="resultEmpty" class="result-empty-container">
+                    <div class="empty-icon"><i class="fa-solid fa-qrcode"></i></div>
+                    <h3>Waiting for Link</h3>
+                    <p>Provide a long URL on the left panel to generate your short code, copy options, and download a custom QR code.</p>
+                </div>
+
+                <!-- Active Result (Hidden by default) -->
+                <div id="resultActive" class="result-active-container hidden">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-circle-check text-success"></i> Link Successfully Shortened</h2>
+                    </div>
+
+                    <div class="url-output-container">
+                        <input type="text" id="resultShortUrl" readonly>
+                        <div class="output-actions">
+                            <button id="copyBtn" class="btn-action btn-copy" title="Copy to clipboard">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                            <a id="visitBtn" href="#" target="_blank" class="btn-action btn-visit" title="Open in new tab">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="result-meta-grid">
+                        <div class="result-qr-box">
+                            <img id="qrCodeImg" src="" alt="QR Code">
+                            <a id="downloadQrBtn" href="#" download="qrcode.png" class="btn btn-secondary btn-sm">
+                                <i class="fa-solid fa-download"></i> Save QR
+                            </a>
+                        </div>
+                        <div class="result-info-box">
+                            <h3>Properties</h3>
+                            <div class="meta-item">
+                                <span class="meta-label">Original URL:</span>
+                                <span class="meta-val" id="detailOriginalUrl"></span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Short Code:</span>
+                                <span class="meta-val" id="detailAlias"></span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Expiration:</span>
+                                <span class="meta-val" id="detailExpiry"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Analytics Analytics Dashboard -->
+        <section class="card analytics-card">
+            <div class="card-header border-bottom">
+                <h2><i class="fa-solid fa-chart-pie text-secondary"></i> Analytics Summary</h2>
+                <p>Global statistics across all active redirects</p>
+            </div>
+
+            <!-- KPI Row -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <span class="kpi-title">Total Links</span>
+                    <h3 id="statTotalUrls" class="kpi-value">0</h3>
+                    <span class="kpi-subtext">Active Short Codes</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-title">Aggregate Clicks</span>
+                    <h3 id="statTotalClicks" class="kpi-value">0</h3>
+                    <span class="kpi-subtext">Total Redirect Events</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-title">Most Clicked Link</span>
+                    <h3 id="statMostClicked" class="kpi-value kpi-trunc">-</h3>
+                    <span class="kpi-subtext" id="statMostClickedClicks">0 Clicks</span>
+                </div>
+            </div>
+
+            <!-- Click Analytics Chart -->
+            <div class="chart-container-wrapper">
+                <h3><i class="fa-solid fa-timeline"></i> Hourly Redirection Traffic (Last 24 Hours)</h3>
+                <div class="chart-wrapper">
+                    <canvas id="clickChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Link Manager / Table Section -->
+        <section class="card table-card">
+            <div class="card-header border-bottom table-header-flex">
+                <div>
+                    <h2><i class="fa-solid fa-list-check text-indigo"></i> Active Mappings</h2>
+                    <p>Browse, search, and delete generated links</p>
+                </div>
+                <div class="table-search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="tableSearchInput" placeholder="Search by short code or target URL...">
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="linksTable">
+                    <thead>
+                        <tr>
+                            <th>Short Code</th>
+                            <th>Target URL</th>
+                            <th>Clicks</th>
+                            <th>Created</th>
+                            <th>Expires</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dynamically populated -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2026 LinkSync Service API. Built with Java 17, Spring Boot 3.3.0, and H2 database.</p>
+        </footer>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>
