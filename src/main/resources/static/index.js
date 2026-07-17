@@ -65,8 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Populate active result
-            resultShortUrl.value = data.shortUrl;
-            visitBtn.href = data.shortUrl;
+            const absoluteShortUrl = window.location.origin + '/' + data.shortCode;
+            resultShortUrl.value = absoluteShortUrl;
+            visitBtn.href = absoluteShortUrl;
             
             const qrUrl = `/api/urls/${data.shortCode}/qrcode`;
             qrCodeImg.src = qrUrl;
@@ -137,8 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
             statTotalClicks.textContent = data.totalClicks;
             
             if (data.mostClickedUrl) {
-                statMostClicked.textContent = data.mostClickedUrl.customAlias || data.mostClickedUrl.shortCode;
-                statMostClicked.href = data.mostClickedUrl.shortUrl;
+                const mostClickedCode = data.mostClickedUrl.customAlias || data.mostClickedUrl.shortCode;
+                statMostClicked.textContent = mostClickedCode;
+                statMostClicked.href = window.location.origin + '/' + data.mostClickedUrl.shortCode;
                 statMostClickedClicks.textContent = `${data.mostClickedUrl.clickCount} Clicks`;
             } else {
                 statMostClicked.textContent = 'None';
@@ -185,8 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const expiryText = link.expiresAt ? formatDate(link.expiresAt) : 'Never';
                 const truncatedUrl = link.originalUrl.length > 45 ? link.originalUrl.substring(0, 42) + '...' : link.originalUrl;
 
+                const absoluteTableUrl = window.location.origin + '/' + link.shortCode;
                 tr.innerHTML = `
-                    <td><a href="${link.shortUrl}" target="_blank" class="short-link-cell">${link.shortCode}</a></td>
+                    <td><a href="${absoluteTableUrl}" target="_blank" class="short-link-cell">${link.shortCode}</a></td>
                     <td><span class="url-trunc" title="${link.originalUrl}">${truncatedUrl}</span></td>
                     <td><span class="badge">${link.clickCount}</span></td>
                     <td>${formatDate(link.createdAt)}</td>
